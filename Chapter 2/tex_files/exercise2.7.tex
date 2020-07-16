@@ -1,29 +1,62 @@
 \documentclass[12pt]{article}
-
 \usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+
+\pagenumbering{gobble}
 
 \begin{document}
-\thispagestyle{empty}
+\noindent
+Before diving into the solution, let us first focus on the resulting expression from the analysis in \eqref{eq:sample_average}.
+\begin{equation}
+    \tag{2.6}
+    \label{eq:sample_average}
+    Q_{n + 1} = \underbrace{\left(1 - \alpha\right)^nQ_1}_\text{initial bias} + \underbrace{\sum^n_{i = 1} \overbrace{\alpha\left(1 - \alpha\right)^{n - i}}^\text{exponential decay}R_i}_\text{weighted average}
+    \quad\text{.}
+\end{equation}
+From the equation, we can see that we need to find an expression for $Q_n$ that contains a recency-weighted average similar to $\sum^n_{i = 1}\alpha\left(1 - \alpha\right)^{n - i}R_i$ but that does not contain an initial bias.
+\par\bigskip
 
-\noindent Using the definition of the \textbf{sigmoid function} we would have:
-
-$$Pr\{A_t = a\} = \frac{e^{H_t(a)}}{e^{H_t(a)} + 1}$$
-$$Pr\{A_t = b\} = 1 - Pr\{A_t = a\} = \frac{1}{e^{H_t(a)} + 1}$$
-
-\noindent Extending the definition of the \textbf{soft-max distribution} for the case of two actions (k=2) we get the following:
-
-$$Pr\{A_t=a\} = \frac{e^{H_t(a)}}{e^{H_t(a)} + e^{H_t(b)}}$$
-$$Pr\{A_t=b\} = \frac{e^{H_t(b)}}{e^{H_t(a)} + e^{H_t(b)}}$$
-
-\noindent According to the definition of the \textit{numerical preference}, if we substract an amount from each of the preferences
-it does not affect the probabilities. So we can redifine $H_t(a)$ and $H_t(b)$ as:
-
-$$H_t(b) \leftarrow  H_t(b) - H_t(b) = 0$$
-$$H_t(a) \leftarrow  H_t(a) - H_t(b) = H_t(a)$$
-
-\noindent and we get:
-
-$$Pr\{A_t=a\} = \frac{e^{H_t(a)}}{e^{H_t(a)} + e^0} = \frac{e^{H_t(a)}}{e^{H_t(a)} + 1} $$
-$$Pr\{A_t=b\} = \frac{e^{0}}{e^{H_t(a)} + e^{0}} = \frac{1}{e^{H_t(a)} + 1}$$
+\noindent
+Let us start by rewriting the incremental average expression for $Q_{n + 1}$.
+To keep the notation less cluttered, we will use the following notation: $Q_n \equiv Q_n(a)$ and $R_n \equiv R_n(a)$.
+\begin{equation*}
+    Q_{n + 1} = Q_n + \beta_n\left[R_n - Q_n\right]
+\end{equation*}
+Now let's substitute $\beta_n$ into the equation and rearrange a little.
+\begin{alignat*}{3}
+    & Q_{n + 1} && = Q_n + \beta_n\left[R_n - Q_n\right] \\
+    & && = \beta_n R_n + \left(1 - \beta_n\right) Q_n \\
+    \implies\quad & Q_{n + 1} && = \left(\frac{\alpha}{\bar{o}_n}\right) R_n + \left(1 - \frac{\alpha}{\bar{o}_n}\right) Q_n \\
+    \implies\quad & \bar{o}_n Q_{n + 1} && = \alpha R_n + \bar{o}_n Q_n - \alpha Q_n \\
+    & && = \alpha R_n + \left(\bar{o}_n - \alpha\right) Q_n
+\end{alignat*}
+Now we can substitute in the expression for $\bar{o}_n$ on the right side of our equation and rearrange some more.
+\begin{alignat*}{2}
+    & \bar{o}_n Q_{n + 1} && = \alpha R_n + \left(\bar{o}_n - \alpha\right) Q_n \\
+    \implies\quad & \bar{o}_n Q_{n + 1} && = \alpha R_n + \left[\bar{o}_{n-1} + \alpha \left(1 - \bar{o}_{n - 1}\right) - \alpha\right] Q_n \\
+    & && = \alpha R_n + \left(\bar{o}_{n-1} - \alpha \bar{o}_{n - 1}\right) Q_n \\
+    & && = \alpha R_n + \left(1 - \alpha \right) \bar{o}_{n - 1} Q_n
+\end{alignat*}
+Now we can easily substitute in the expression $Q_n$ and follow the same steps as before.
+\begin{alignat*}{2}
+    & \bar{o}_n Q_{n + 1} && = \alpha R_n + \left(1 - \alpha \right) \bar{o}_{n - 1} Q_n \\
+    \implies\quad & \bar{o}_n Q_{n + 1} && = \alpha R_n + \left(1 - \alpha \right) \bar{o}_{n - 1} \left[Q_{n - 1} + \beta_{n - 1}\left(R_{n - 1} - Q_{n - 1}\right)\right] \\
+    & && \vdots \\
+    & && = \alpha R_n + \left(1 - \alpha\right) \alpha R_{n - 1} + \left(1 - \alpha\right)^2\bar{o}_{n - 2}Q_{n - 1}
+\end{alignat*}
+We can repeat this while process recursively until we reach $Q_1$ (our initial action value estimate).
+Additionally, we can restructure our equation into a form resembling \eqref{eq:sample_average}:
+\begin{equation*}
+    \bar{o}_n Q_{n + 1} = \left(1 - \alpha\right)^n\bar{o}_0Q_1 + \sum^n_{i = 1}\alpha \left(1 - \alpha\right)^{n - i}R_i
+    \quad\text{.}
+\end{equation*}
+Remember, $\bar{o}_n \doteq 0$, so we can simplify some more:
+\begin{alignat*}{2}
+    & \bar{o}_n Q_{n + 1} && = \left(1 - \alpha\right)^n\bar{o}_0Q_1 + \sum^n_{i = 1}\alpha \left(1 - \alpha\right)^{n - i}R_i \\
+    & && = \sum^n_{i = 1}\alpha \left(1 - \alpha\right)^{n - i}R_i \\
+    \implies\quad & Q_{n + 1} && = \frac{1}{\bar{o}_n} \sum^n_{i = 1}\alpha \left(1 - \alpha\right)^{n - i}R_i
+    \quad\text{.}
+\end{alignat*}
+Finally, we have shown that $Q_{n + 1}$ is an exponential recency-weighted average without initial bias.
 
 \end{document}
