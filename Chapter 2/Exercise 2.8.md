@@ -1,33 +1,20 @@
 # Exercise 2.8
 
 ## Question:
-Suppose you face a 2-armed bandit task whose true action values change randomly from time step
-to time step. Specifically, suppose that, for any time step, the true values of action 1 and 2
-are respectively 0.1 and 0.2 with probability 0.5 (case A), and 0.9 and 0.8 with probability 0.5
-(case B). If you are not able to tell which case you face at any step, what is the best expectation
-of success you can achieve and how should you behave to achieve it? Now suppose that on each step
-you are told whether you are facing case A or case B (although you still don't know the true action
-values). This is an associative search task. What is the best expectation of success you can
-achieve in this task, and how should you behave to achieve it?
+In Figure 2.4 the UCB algorithm shows a distinct spike in performance on the
+11th step. Why is this? Note that for your answer to be fully satisfactory it
+must explain both why the reward increases on the 11th step and why it
+decreases on the subsequent steps. Hint: if _c_ = 1, then the spike is less
+prominent.
 
 ## Answer:
+Based on the definition of the UCB algorithm, the agent is encouraged to
+explore. Remember, any previously unexplored action is by definition a
+maximizing action, so the agent will have explored all of the 10 (or, in general
+_k_) different arms of the testbed by the 11th step. After exploring all of the different options, the agent will have a better initial estimate of the action values compared to the ε-greedy algorithm (which will have done relatively little exploration). The better initial estimates will lead the UCB-based agent to choose a better action on the 11th step.
 
-For the first scenario, you cannot hold individual estimates for the case A and B. Therefore,
-the best approach is to select the action that has best value estimate in combination. In this case,
-the estimates of both actions the same. So the best expectation of success is 0.5 and it can be
-achieved by selecting an action randomly at each step.
-
-
-A<sub>1</sub> = 0.5 \* 0.1 + 0.5 \* 0.9 = 0.5
-
-A<sub>2</sub> = 0.5 \* 0.2 + 0.5 \* 0.8 = 0.5
-
-For the second scenario, you can hold independent estimates for the case A and B, thus we can learn
-the best action for each one treating them as independent bandit problems. The best expectation
-of success is 0.55 obtained from selecting A<sub>2</sub> in case A and A<sub>1</sub> in case B.
-
-0.5 \* 0.2 + 0.5 \* 0.9 = 0.55
-
-
-
-
+It is important to note that while the UCB-based agent has relatively good
+initial estimates of the action values, they are not (necessarily) optimal.
+Therefore, the agent will have to continue interacting with the testbed to
+improve its action value estimates, causing the average reward to drop until the
+estimates start to converge on their expected values.
